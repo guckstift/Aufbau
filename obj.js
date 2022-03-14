@@ -13,16 +13,16 @@ const obj_proto = {
 	y: 0,
 	put(x, y)
 	{
-		objmap[this.x + this.y * mapsize] = null;
+		map.objs[this.x + this.y * mapsize] = null;
 		
 		this.x = x;
 		this.y = y;
 		
 		if(this.name === "tower") {
-			extend_prop(this.player, x, y, 5);
+			map.extend_prop(this.player, x, y, 5);
 		}
 		
-		objmap[x + y * mapsize] = this;
+		map.objs[x + y * mapsize] = this;
 		return this;
 	},
 	draw(obj_img)
