@@ -8,22 +8,57 @@ function create_map()
 	let owners = new Array(mapsize * mapsize);
 	let lights = new Uint8Array(mapsize * mapsize);
 	
-	return {terra, objs, owners, lights, draw: draw_map, extend_prop};
+	return {
+		terra, objs, owners, lights, draw: draw_map, extend_prop, get_walkable,
+		get_path, get_obj,
+	};
+}
+
+function get_obj(x, y)
+{
+	if(y < 0 || y >= mapsize || x < 0 || x >= mapsize) return false;
+	let index = x + y*mapsize;
+	return this.objs[index];
+}
+
+function get_path(player, start, goal)
+{
+	return find_path(start, goal, [mapsize, mapsize], pos => {
+		return this.get_walkable(player, pos[0], pos[1]);
+	});
+}
+
+function get_walkable(player, x, y)
+{
+	if(y < 0 || y >= mapsize || x < 0 || x >= mapsize) return false;
+	let index = x + y*mapsize;
+	let t = this.terra[index];
+	let ow = this.owners[index];
+	let ob = this.objs[index];
+	return t >= 0 && t <= 2 && ow === player && (!ob);
 }
 
 function extend_prop(player, cx, cy, radius)
 {
 	for(let y = cy - radius; y <= cy + radius; y++) {
 		if(y < 0 || y >= mapsize) continue;
+		
 		for(let x = cx - radius; x <= cx + radius; x++) {
 			if(x < 0 || x >= mapsize) continue;
 			let index = x + y*mapsize;
 			let d = (y - cy)**2 + (x - cx)**2;
-			if(d >= (radius+1)**2) continue;
-			this.lights[index] |= 1;
-			if(d >= radius**2) continue;
-			this.lights[index] |= 2;
-			if(!map.owners[index]) this.owners[index] = player;
+			
+			if(d < (radius+1)**2) {
+				if(player === cur_player) this.lights[index] |= 1;
+			}
+			
+			if(d < radius**2) {
+				if(player === cur_player) this.lights[index] |= 2;
+				
+				if(!map.owners[index]) {
+					this.owners[index] = player;
+				}
+			}
 		}
 	}
 }
@@ -40,6 +75,7 @@ function draw_map(imgs)
 			let sx = t * 32;
 			let sy = 0;
 			
+			//if(!this.get_walkable({id:1},x, y)) ctx.globalAlpha = 0.75;
 			if(this.lights[index] == 1) ctx.globalAlpha = 0.5;
 			ctx.drawImage(
 				imgs.terra,
@@ -64,8 +100,8 @@ function draw_map(imgs)
 				);
 			}
 			
-			if(own > 0) {
-				fence_col_offs = (own-1) * 32;
+			if(own) {
+				fence_col_offs = (own.id-1) * 32;
 				let own_t = this.owners[index - mapsize];
 				if(own_t != own) {
 					ctx.drawImage(imgs.fence, 5 + fence_col_offs, 14, 24, 5,
@@ -73,11 +109,11 @@ function draw_map(imgs)
 				}
 			}
 			
-			if(obj) {
+			if(obj && own === cur_player) {
 				obj.draw(imgs.obj);
 			}
 			
-			if(own > 0) {
+			if(own) {
 				let own_l = this.owners[index - 1];
 				let own_r = this.owners[index + 1];
 				let own_b = this.owners[index + mapsize];

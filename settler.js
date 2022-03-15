@@ -2,70 +2,44 @@
 let settler_proto = create_obj("settler");
 
 Object.assign(settler_proto, {
-	moving: false,
-	vx: 0,
-	vy: 0,
-	ex: 0,
-	ey: 0,
-	dir: false,
-	steps: 0,
+	way: 0,
+	fx: 0,
+	fy: 0,
+	path: [],
 	
-	go(dir) {
-		this.stop();
-		this.moving = true;
-		this.vx = dir[0];
-		this.vy = dir[1];
-		this.ex = 32 * dir[0];
-		this.ey = 32 * dir[1];
+	goto(x, y)
+	{
+		let path = map.get_path(this.player, [this.x, this.y], [x, y]);
 		
-		this.framex = (
-			dir[0] > 0 ? 1 :
-			dir[0] < 0 ? 2 :
-			dir[1] > 0 ? 0 :
-			dir[1] < 0 ? 3 :
-			0
-		);
-	},
-	
-	go_line(dir, steps)
-	{
-		this.dir = dir;
-		this.steps = steps - 1;
-		this.go(dir);
-	},
-	
-	stop()
-	{
-		if(this.moving) {
-			this.moving = false;
-			this.framex = 0;
-			this.vx = 0;
-			this.vy = 0;
-			this.ex = 0;
-			this.ey = 0;
-			this.dx = 0;
-			this.dy = 0;
+		if(path && path.length) {
+			this.path = path;
 		}
 	},
 	
-	update() {
-		this.dx += this.vx;
-		this.dy += this.vy;
-		
-		if(this.moving) {
-			if(
-				this.vx > 0 && this.dx >= this.ex ||
-				this.vx < 0 && this.dx <= this.ex ||
-				this.vy > 0 && this.dy >= this.ey ||
-				this.vy < 0 && this.dy <= this.ey
-			) {
-				this.put(this.x + this.vx, this.y + this.vy);
-				this.stop();
+	update()
+	{
+		if(this.way == 0) {
+			if(this.path.length) {
+				let [tox, toy] = this.path.shift();
+				this.way = 1;
+				this.fx = this.x;
+				this.fy = this.y;
+				this.put(tox, toy);
 				
-				if(this.steps) {
-					this.steps --;
-					this.go(this.dir);
-				}
+				this.framex = (
+					tox > this.fx ? 1 : tox < this.fx ? 2 :
+					toy > this.fy ? 0 : toy < this.fy ? 3 : 0
+				);
+			}
+		}
+		
+		if(this.way > 0) {
+			this.way -= 0.04;
+			this.dx = (this.fx - this.x) * 32 * this.way;
+			this.dy = (this.fy - this.y) * 32 * this.way;
+			
+			if(this.way <= 0) {
+				this.way = 0;
 			}
 		}
 	},

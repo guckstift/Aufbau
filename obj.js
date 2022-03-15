@@ -11,6 +11,7 @@ const obj_proto = {
 	dy: 0,
 	x: 0,
 	y: 0,
+	
 	put(x, y)
 	{
 		map.objs[this.x + this.y * mapsize] = null;
@@ -25,8 +26,18 @@ const obj_proto = {
 		map.objs[x + y * mapsize] = this;
 		return this;
 	},
+	
 	draw(obj_img)
 	{
+		if(this === selected) {
+			ctx.strokeStyle = "#0f0";
+			ctx.strokeRect(
+				this.x * 32 - camx + 0.5 + this.dx,
+				this.y * 32 - camy + 0.5 + this.dy,
+				31, 31
+			);
+		}
+		
 		ctx.drawImage(
 			obj_img,
 			this.sx + this.framex * this.w,
