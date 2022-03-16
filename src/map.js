@@ -139,7 +139,13 @@ function get_draw_bounds()
 	return {
 		startx: Math.max(0, Math.floor(camx / 32) - 1),
 		starty: Math.max(0, Math.floor(camy / 32)),
-		endx: Math.min(mapsize - 1, Math.floor((camx + 800) / 32)),
-		endy: Math.min(mapsize - 1, Math.floor((camy + 600) / 32) + 1),
+		
+		endx: Math.min(
+			mapsize - 1, Math.floor((camx + canvas.width) / 32)
+		),
+		
+		endy: Math.min(
+			mapsize - 1, Math.floor((camy + canvas.height) / 32) + 1
+		),
 	};
 }

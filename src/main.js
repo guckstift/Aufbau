@@ -5,6 +5,8 @@ let camx = -100, camy = -66;
 let curx = -1, cury = -1;
 let rmb_down = false;
 let panning = false;
+let panstart_x = 0;
+let panstart_y = 0;
 let cur_player = create_player(1);
 let other_player = create_player(2);
 
@@ -15,6 +17,7 @@ let selected = null;
 	let imgs = {
 		terra: await load_image("gfx/terra.png"),
 		obj: await load_image("gfx/obj.png"),
+		building: await load_image("gfx/building.png"),
 		fence: await load_image("gfx/fence.png"),
 		ware: await load_image("gfx/ware.png"),
 		settler: await load_image("gfx/settler.png"),
@@ -40,6 +43,8 @@ let selected = null;
 		}
 		else if(e.button === 2) {
 			rmb_down = true;
+			panstart_x = e.clientX;
+			panstart_y = e.clientY;
 		}
 	};
 	
@@ -54,7 +59,9 @@ let selected = null;
 	};
 	
 	onmousemove = e => {
-		if(rmb_down && panning === false) {
+		let dist = (panstart_x - e.clientX)**2 + (panstart_y - e.clientY)**2;
+		
+		if(rmb_down && panning === false && dist >= 16**2) {
 			panning = true;
 			canvas.requestPointerLock();
 		}
@@ -89,6 +96,14 @@ let selected = null;
 	
 	function render()
 	{
+		if(
+			canvas.width !== canvas.clientWidth ||
+			canvas.height !== canvas.clientHeight
+		) {
+			canvas.width = canvas.clientWidth;
+			canvas.height = canvas.clientHeight;
+		}
+		
 		ctx.fillStyle = "#000";
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
 		map.draw(imgs);
